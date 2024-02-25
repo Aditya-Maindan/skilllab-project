@@ -1,20 +1,32 @@
 const express = require('express');
-const authRoutes = require('./routes/auth');
-const blogRoutes = require('./routes/blogs');
-const appLevelMiddleware = require('./middleware/appLevel');
+const mongoose = require('mongoose');
+const bodyParsingMiddleware = require('./middleware/bodyParsingMiddleware'); 
+const errorHandlerMiddleware = require('./middleware/errorHandlerMiddleware');
+const authMiddleware = require('./middleware/authMiddleware'); // Import authMiddleware
 
 const app = express();
 
-// Built-in middleware
-app.use(express.json());  
 
-// Application-level middleware
-app.use(appLevelMiddleware);
+app.use(bodyParsingMiddleware); 
+app.use(authMiddleware); // Apply authMiddleware globally
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/blogs', blogRoutes); 
+// Routes - Import your route files
+const blogPostRoutes = require('./routes/blogPostRoutes'); 
+const userRoutes = require('./routes/userRoutes');
 
-// ... (Error handling would go here)
+// Apply Routes
+app.use('/blog', blogPostRoutes);
+app.use('/users', userRoutes);
 
-app.listen(3000, () => console.log('Server listening on port 3000'));
+// Error Handling Middleware (Should be last)
+app.use(errorHandlerMiddleware);
+// MongoDB connection
+connect('mongodb://localhost:27017/Blogs', {
+    useNewUrlParser: true, 
+    useUnifiedTopology: true
+})
+.then(() => {
+    // Start the server after successful database connection
+    app.listen(3000, () => console.log('Server running on port 3000')); 
+})
+.catch(err => console.error('Error connecting to MongoDB:', err));
